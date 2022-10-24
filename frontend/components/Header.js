@@ -26,6 +26,22 @@ export default function Header() {
       >
         Log Out
       </button>
+      <button
+        className="btn"
+        style={{
+          float: "right",
+          fontSize: "20px",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          margin: "10px",
+        }}
+        onClick={() => {
+          router.push("/profile-page");
+        }}
+      >
+        View Profile
+      </button>
       <h4 style={{ color: "wheat" }}>Implemented Features:</h4>
       <ul>
         <li>Add a new task</li>

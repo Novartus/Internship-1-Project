@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import axios from "axios";
+import LoadingScreen from "../components/LoadingScreen";
 
 export default function Item({ todo, todos, setTodos }) {
   const [mutableTodo, setMutableTodo] = useState(todo);
+  const [isLoading, setLoading] = useState(false);
 
   const classes = mutableTodo.completed ? "completed" : "";
   const checkIcon = mutableTodo.completed ? (
@@ -19,8 +21,7 @@ export default function Item({ todo, todos, setTodos }) {
   );
 
   const toggleCompleted = async () => {
-    console.log("toggleCompleted Called");
-
+    setLoading(true);
     const completeTaskResponse = await axios({
       method: "PATCH",
       url: "http://localhost:3000/auth/tasks-complete",
@@ -31,7 +32,7 @@ export default function Item({ todo, todos, setTodos }) {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     });
-    console.log("Complete Task Submitted", completeTaskResponse);
+
     if (completeTaskResponse.status === 200) {
       const viewTasksResponse = await axios({
         method: "GET",
@@ -43,13 +44,16 @@ export default function Item({ todo, todos, setTodos }) {
       const viewTasksResponseData = viewTasksResponse.data;
       setTodos(viewTasksResponseData);
       setMutableTodo({ ...mutableTodo, completed: !mutableTodo.completed });
+      setLoading(false);
     } else {
+      setLoading(false);
       alert("Task Completion Update Status Failed!, Something went wrong");
     }
   };
 
   const handleDelete = async (e) => {
     e.preventDefault();
+    setLoading(true);
     const removeTaskResponse = await axios({
       method: "DELETE",
       url: "http://localhost:3000/auth/tasks-delete",
@@ -70,11 +74,14 @@ export default function Item({ todo, todos, setTodos }) {
       });
       const viewTasksResponseData = viewTasksResponse.data;
       setTodos(viewTasksResponseData);
+      setLoading(false);
     } else {
+      setLoading(false);
       alert("Task removing Failed!, Something went wrong");
     }
   };
 
+  if (isLoading) return <LoadingScreen />;
   return (
     <li className={classes}>
       <label htmlFor={`todoCheckbox-${todo.task_id}`}>Completed Checkbox</label>

@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import axios from "axios";
-
-// const idGenerator = (array) => {
-//   const ids = array.map((item) => item.id);
-//   return Math.max(...ids) + 1;
-// };
+import LoadingScreen from "../components/LoadingScreen";
 
 export default function Form({ todos, setTodos }) {
   const [todoInput, setTodoInput] = useState("");
+  const [isLoading, setLoading] = useState(false);
+
   const handleChange = (e) => {
     setTodoInput(e.target.value);
   };
@@ -16,12 +14,12 @@ export default function Form({ todos, setTodos }) {
     e.preventDefault();
     if (todoInput) {
       const newTodo = {
-        // id: idGenerator(todos),
-        content: todoInput.trim(),
+        title: todoInput.trim(),
         completed: false,
         removed: false,
       };
 
+      setLoading(true);
       const addTaskResponse = await axios({
         method: "POST",
         url: "http://localhost:3000/auth/tasks",
@@ -34,14 +32,19 @@ export default function Form({ todos, setTodos }) {
       });
       console.log("Added Task Submitted", addTaskResponse);
       if (addTaskResponse.status === 201) {
+        newTodo["task_id"] = addTaskResponse.data._id;
         setTodos([...todos, newTodo]);
         setTodoInput("");
+        setLoading(false);
       } else {
+        setLoading(false);
         alert("Task adding Failed!, Something went wrong");
       }
       setTodoInput("");
     }
   };
+
+  if (isLoading) return <LoadingScreen />;
 
   return (
     <div className="form-control">

@@ -1,18 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import axios from "axios";
 import Header from "../components/Header";
 import Form from "../components/Form";
 import Footer from "../components/Footer";
 import List from "../components/List";
-import axios from "axios";
-
-const data = [
-  { id: 1, content: "Start the demo", completed: true },
-  { id: 2, content: "Introduce Team-members", completed: false },
-  { id: 3, content: "Answer Questions", completed: false },
-  { id: 4, content: "Explore Tech Stack", completed: false },
-  { id: 5, content: "Ask for feedback", completed: false },
-];
+import LoadingScreen from "../components/LoadingScreen";
 
 function Home() {
   const router = useRouter();
@@ -28,10 +21,12 @@ function Home() {
   const [themeLight, setThemeLight] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [filteredTodos, setFilteredTodos] = useState(todos);
+  const [isLoading, setLoading] = useState(false);
 
   const themeClass = "dark";
 
   useEffect(async () => {
+    setLoading(true);
     const viewTasksResponse = await axios({
       method: "GET",
       url: "http://localhost:3000/auth/tasks-active",
@@ -41,7 +36,9 @@ function Home() {
     });
     if (viewTasksResponse.status === 200) {
       setTodos(viewTasksResponse.data);
+      setLoading(false);
     } else {
+      setLoading(false);
       alert("Task Fetching failed!, Something went wrong");
     }
   }, []);
@@ -61,6 +58,8 @@ function Home() {
     };
     handleFilter();
   }, [todos, filterStatus]);
+
+  if (isLoading) return <LoadingScreen />;
 
   return (
     <div className={`wrapper ${themeClass}`}>

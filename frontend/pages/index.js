@@ -1,18 +1,21 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
+import LoadingScreen from "../components/LoadingScreen";
 
 export default function Home() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setLoading] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (email === "" || password === "") {
       alert("Please fill all the fields");
       return;
     }
-    console.log("Submitted", email, password);
+    setLoading(true);
     const loginAPIResponse = await axios({
       method: "POST",
       url: "http://localhost:3000/auth/login",
@@ -23,13 +26,17 @@ export default function Home() {
     });
     console.log("Submitted", loginAPIResponse);
     if (loginAPIResponse.status === 201) {
+      setLoading(false);
       localStorage.setItem("token", loginAPIResponse.data.token);
       router.push("/todo");
     } else {
+      setLoading(false);
       alert("Login Failed!, Something went wrong");
     }
     console.log("Token", localStorage.getItem("token"));
   };
+
+  if (isLoading) return <LoadingScreen />;
 
   return (
     <div className="login-box">

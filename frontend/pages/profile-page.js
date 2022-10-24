@@ -1,9 +1,9 @@
-import { FaGoogle, FaFacebookF, FaEnvelope, FaLock } from "react-icons/fa";
-import Image from "next/image";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import axios from "axios";
-import { useState, useEffect } from "react";
 
 export default function profilePage() {
+  const router = useRouter();
   const [image, setImage] = useState("N/A");
   const [bio, setBio] = useState("N/A");
   const [email, setEmail] = useState("N/A");
@@ -11,6 +11,12 @@ export default function profilePage() {
   const [phone, setPhone] = useState("N/A");
   const [password, setPassword] = useState("N/A");
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/");
+    }
+  }, []);
   const fetchProfile = async () => {
     const profile = await axios({
       method: "GET",
