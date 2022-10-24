@@ -32,7 +32,7 @@ export default function List({
             {filteredTodos.map((todo) => (
               <Item
                 todo={todo}
-                key={todo.id}
+                key={todo.task_id}
                 setTodos={setTodos}
                 todos={todos}
               />

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 export default function Item({ todo, todos, setTodos }) {
   const [mutableTodo, setMutableTodo] = useState(todo);
@@ -17,25 +18,68 @@ export default function Item({ todo, todos, setTodos }) {
     ""
   );
 
-  const toggleCompleted = () => {
-    setMutableTodo({ ...mutableTodo, completed: !mutableTodo.completed });
-    const updatedTodos = todos.map((item) =>
-      item.id === todo.id ? { ...item, completed: !item.completed } : item
-    );
-    setTodos(updatedTodos);
+  const toggleCompleted = async () => {
+    console.log("toggleCompleted Called");
+
+    const completeTaskResponse = await axios({
+      method: "PATCH",
+      url: "http://localhost:3000/auth/tasks-complete",
+      data: {
+        task_id: todo.task_id,
+      },
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    console.log("Complete Task Submitted", completeTaskResponse);
+    if (completeTaskResponse.status === 200) {
+      const viewTasksResponse = await axios({
+        method: "GET",
+        url: "http://localhost:3000/auth/tasks-active",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const viewTasksResponseData = viewTasksResponse.data;
+      setTodos(viewTasksResponseData);
+      setMutableTodo({ ...mutableTodo, completed: !mutableTodo.completed });
+    } else {
+      alert("Task Completion Update Status Failed!, Something went wrong");
+    }
   };
 
-  const handleDelete = (e) => {
+  const handleDelete = async (e) => {
     e.preventDefault();
-    const updatedTodos = todos.filter((item) => item.id !== todo.id);
-    setTodos(updatedTodos);
+    const removeTaskResponse = await axios({
+      method: "DELETE",
+      url: "http://localhost:3000/auth/tasks-delete",
+      data: {
+        task_id: todo.task_id,
+      },
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    if (removeTaskResponse.status === 200) {
+      const viewTasksResponse = await axios({
+        method: "GET",
+        url: "http://localhost:3000/auth/tasks-active",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const viewTasksResponseData = viewTasksResponse.data;
+      setTodos(viewTasksResponseData);
+    } else {
+      alert("Task removing Failed!, Something went wrong");
+    }
   };
 
   return (
     <li className={classes}>
-      <label htmlFor={`todoCheckbox-${todo.id}`}>Completed Checkbox</label>
+      <label htmlFor={`todoCheckbox-${todo.task_id}`}>Completed Checkbox</label>
       <input
-        id={`todoCheckbox-${todo.id}`}
+        id={`todoCheckbox-${todo.task_id}`}
         type="checkbox"
         name="completed-checkbox"
         defaultChecked={mutableTodo.completed}
@@ -46,7 +90,7 @@ export default function Item({ todo, todos, setTodos }) {
         </span>
       </div>
 
-      <p>{mutableTodo.content}</p>
+      <p>{mutableTodo.title}</p>
       <div className="checkbox-border-wrap">
         <span
           className="checkbox"

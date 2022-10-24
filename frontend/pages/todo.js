@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import Form from "../components/Form";
 import Footer from "../components/Footer";
 import List from "../components/List";
+import axios from "axios";
 
 const data = [
   { id: 1, content: "Start the demo", completed: true },
@@ -23,12 +24,27 @@ function Home() {
     }
   }, []);
 
-  const [todos, setTodos] = useState(data);
+  const [todos, setTodos] = useState([]);
   const [themeLight, setThemeLight] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [filteredTodos, setFilteredTodos] = useState(todos);
 
   const themeClass = "dark";
+
+  useEffect(async () => {
+    const viewTasksResponse = await axios({
+      method: "GET",
+      url: "http://localhost:3000/auth/tasks-active",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    if (viewTasksResponse.status === 200) {
+      setTodos(viewTasksResponse.data);
+    } else {
+      alert("Task Fetching failed!, Something went wrong");
+    }
+  }, []);
 
   useEffect(() => {
     const handleFilter = () => {
