@@ -143,7 +143,7 @@ export class UserService {
 
   async getActiveTasks(user: User) {
     const tasks = await this.taskModel
-      .find({ userId: user._id, completed: false, removed: false })
+      .find({ userId: user._id, removed: false })
       .exec();
     const taskData = tasks.map((task) => ({
       task_id: task._id,
@@ -162,7 +162,7 @@ export class UserService {
     if (!task) {
       throw new HttpException('Task not found', HttpStatus.BAD_REQUEST);
     }
-    task.completed = true;
+    task.completed = !task.completed;
     await task.save();
     return task;
   }
