@@ -1,12 +1,31 @@
 import React from "react";
+import { useRouter } from "next/router";
 
 export default function Header() {
+  const router = useRouter();
   return (
     <>
       <header>
         <h1>TODO App</h1>
         <title>Todo Application - Group 14</title>
       </header>
+      <button
+        className="btn"
+        style={{
+          float: "right",
+          fontSize: "20px",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          margin: "10px",
+        }}
+        onClick={() => {
+          localStorage.removeItem("token");
+          router.push("/");
+        }}
+      >
+        Log Out
+      </button>
       <h4 style={{ color: "wheat" }}>Implemented Features:</h4>
       <ul>
         <li>Add a new task</li>

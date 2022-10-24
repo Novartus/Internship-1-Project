@@ -6,9 +6,12 @@ export default function Home() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (email === "" || password === "") {
+      alert("Please fill all the fields");
+      return;
+    }
     console.log("Submitted", email, password);
     const loginAPIResponse = await axios({
       method: "POST",
@@ -31,6 +34,14 @@ export default function Home() {
   return (
     <div className="login-box">
       <h2>Login for Todo</h2>
+      <h4
+        style={{
+          color: "wheat",
+          paddingBottom: "15px",
+        }}
+      >
+        Assignment by Group 14
+      </h4>
       <form>
         <div className="user-box">
           <input

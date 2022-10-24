@@ -33,7 +33,6 @@ export class UserService {
     createdUser.bio = bio;
     createdUser.password = password;
 
-    console.log('Created User Here: ', createdUser);
     await createdUser.save();
     return this.sanitizeUser(createdUser);
   }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import Header from "../components/Header";
 import Form from "../components/Form";
 import Footer from "../components/Footer";
@@ -13,6 +14,15 @@ const data = [
 ];
 
 function Home() {
+  const router = useRouter();
+
+  React.useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/");
+    }
+  }, []);
+
   const [todos, setTodos] = useState(data);
   const [themeLight, setThemeLight] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
