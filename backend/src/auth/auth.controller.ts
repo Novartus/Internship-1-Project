@@ -120,4 +120,10 @@ export class AuthController {
   async deleteTask(@Body() task_id: any, @GetUser() user: User) {
     return this.userService.deleteTask(task_id, user);
   }
+
+  @Post('/task-search')
+  @UseGuards(AuthGuard('jwt'))
+  async searchTask(@Body() task: any, @GetUser() user: User) {
+    return this.userService.searchTask(task, user);
+  }
 }

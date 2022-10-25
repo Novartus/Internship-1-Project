@@ -179,4 +179,23 @@ export class UserService {
     await task.save();
     return task;
   }
+
+  async searchTask(searchData: any, user: User) {
+    const tasks = await this.taskModel
+      .find({
+        $and: [
+          { userId: user._id },
+          { removed: false },
+          { title: { $regex: searchData.task.toString(), $options: 'i' } },
+        ],
+      })
+      .exec();
+    const taskData = tasks.map((task) => ({
+      task_id: task._id,
+      title: task.title,
+      completed: task.completed,
+      removed: task.removed,
+    }));
+    return taskData;
+  }
 }

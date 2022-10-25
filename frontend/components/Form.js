@@ -22,7 +22,7 @@ export default function Form({ todos, setTodos }) {
       setLoading(true);
       const addTaskResponse = await axios({
         method: "POST",
-        url: "http://localhost:3000/auth/tasks",
+        url: "http://localhost:3000/auth/tasks", // add task API
         data: {
           title: todoInput.trim(),
         },
@@ -30,7 +30,7 @@ export default function Form({ todos, setTodos }) {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      console.log("Added Task Submitted", addTaskResponse);
+
       if (addTaskResponse.status === 201) {
         newTodo["task_id"] = addTaskResponse.data._id;
         setTodos([...todos, newTodo]);
