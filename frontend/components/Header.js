@@ -7,7 +7,7 @@ export default function Header() {
     <>
       <header>
         <h1>TODO App</h1>
-        <title>Todo Application - Group 14</title>
+        <title>Todo Application - A2 Group 1</title>
       </header>
       <button
         className="btn"

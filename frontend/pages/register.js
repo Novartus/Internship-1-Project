@@ -51,7 +51,7 @@ export default function Register() {
           paddingBottom: "15px",
         }}
       >
-        Assignment by Group 14
+        Assignment by A2 Group 1
       </h4>
       <form>
         <div className="user-box">
