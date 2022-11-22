@@ -8,6 +8,12 @@ import {
   Req,
   HttpStatus,
   Delete,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  FileTypeValidator,
+  UploadedFiles,
+  Param,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport/dist/auth.guard';
 import { RegisterDTO } from 'src/user/register.dto';
@@ -18,9 +24,11 @@ import { GetUser } from '../../decorator/get-user.decorator';
 import { User } from 'src/types/user';
 import { Payload } from 'src/types/payload';
 import { Task } from 'src/types/task';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('auth')
 export class AuthController {
+  containerName = 'gallery';
   constructor(
     private userService: UserService,
     private authService: AuthService,
@@ -125,5 +133,80 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   async searchTask(@Body() task: any, @GetUser() user: User) {
     return this.userService.searchTask(task, user);
+  }
+
+  @Post('/upload-image')
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(FileInterceptor('image', { dest: './uploads' }))
+  async uploadImage(
+    @UploadedFile()
+    file: Express.Multer.File,
+    @GetUser() user: User,
+    @Req() req: any,
+  ) {
+    return {
+      statusCode: HttpStatus.OK,
+      data: file,
+    };
+    // return this.userService.uploadImage(image, user);
+  }
+
+  @Post('upload')
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(FileInterceptor('image'))
+  async upload(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: any,
+    @GetUser() user: User,
+  ) {
+    await this.userService.upload(file, body, this.containerName, user);
+  }
+
+  // delete file
+  @Delete('/:filename')
+  async delete(
+    @Param('filename') filename: string,
+    @GetUser() user: User,
+  ): Promise<string> {
+    await this.userService.deleteFile(filename, this.containerName, user);
+    return 'deleted';
+  }
+
+  @Get('/all/images')
+  @UseGuards(AuthGuard('jwt'))
+  async getAllImages(@GetUser() user: User) {
+    return await this.userService.getAllImages(user);
+  }
+
+  @Get('/image/label')
+  @UseGuards(AuthGuard('jwt'))
+  async findImageByLabel(
+    @Body() body: { label: string },
+    @GetUser() user: User,
+  ) {
+    return await this.userService.findImageByLabel(body.label, user);
+  }
+
+  @Delete('/image/delete')
+  @UseGuards(AuthGuard('jwt'))
+  async deleteImage(@Body() body: { image: string }, @GetUser() user: User) {
+    return await this.userService.deleteImage(body.image, user);
+  }
+
+  @Patch('/image/update')
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(FileInterceptor('image'))
+  async updateImage(
+    @Body() body: { imageURL: string },
+    @UploadedFile() file: Express.Multer.File,
+    @GetUser() user: User,
+  ) {
+    console.log('Update Body', body);
+    return await this.userService.updateImage(
+      body.imageURL,
+      this.containerName,
+      file,
+      user,
+    );
   }
 }

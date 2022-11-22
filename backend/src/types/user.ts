@@ -10,4 +10,8 @@ export interface User extends Document {
     id: string;
     avatar: string;
   };
+  images?: {
+    url: string;
+    label: string;
+  }[];
 }

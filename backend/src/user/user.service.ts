@@ -8,6 +8,8 @@ import { RegisterDTO } from './register.dto';
 import * as bcrypt from 'bcrypt';
 import { ChangePasswordDTO, LoginDTO } from 'src/auth/login.dto';
 import { Payload } from 'src/types/payload';
+import { v4 as uuid } from 'uuid';
+import { BlobServiceClient, BlockBlobClient } from '@azure/storage-blob';
 
 @Injectable()
 export class UserService {
@@ -15,6 +17,11 @@ export class UserService {
     @InjectModel('User') private userModel: Model<User>,
     @InjectModel('Task') private taskModel: Model<Task>,
   ) {}
+
+  readonly azureConnection = process.env.AZURE_STORAGE_CONNECTION_STRING;
+  readonly azurePublicUrl =
+    'https://storagegallery.blob.core.windows.net/gallery';
+  containerName: string;
 
   async create(RegisterDTO: RegisterDTO) {
     const { email, password, phone, bio, name } = RegisterDTO;
@@ -197,5 +204,121 @@ export class UserService {
       removed: task.removed,
     }));
     return taskData;
+  }
+
+  // -- blob -- //!SECTION
+  getBlobClient(imageName: string): BlockBlobClient {
+    const blobClientService = BlobServiceClient.fromConnectionString(
+      this.azureConnection,
+    );
+    const containerClient = blobClientService.getContainerClient(
+      this.containerName,
+    );
+    const blobClient = containerClient.getBlockBlobClient(imageName);
+    return blobClient;
+  }
+
+  async upload(
+    file: Express.Multer.File,
+    body: { label: string },
+    containerName: string,
+    user: User,
+  ) {
+    this.containerName = containerName;
+    const imgUrl = uuid() + file.originalname;
+    const blobClient = this.getBlobClient(imgUrl);
+    await blobClient.uploadData(file.buffer);
+    const publicUrl = `${this.azurePublicUrl}/${imgUrl}`;
+    await this.uploadImage(publicUrl, body.label, user);
+  }
+
+  //   read file from azureblob
+  // async getFile(fileName: string, containerName: string) {
+  //   this.containerName = containerName;
+  //   const blobClient = this.getBlobClient(fileName);
+  //   const blobDownloaded = await blobClient.download();
+  //   return blobDownloaded.readableStreamBody;
+  // }
+  //   delete file
+  async deleteFile(filename: string, containerName: string, user: User) {
+    this.containerName = containerName;
+    const blobClient = this.getBlobClient(filename);
+    await blobClient.deleteIfExists();
+  }
+
+  // get all images
+  async getAllImages(user: User) {
+    const findUserImages = await this.userModel
+      .findOne({ email: user.email })
+      .select('images');
+    return findUserImages.images ? findUserImages.images : [];
+  }
+  async uploadImage(image: string, label: string, user: User) {
+    const findUser = await this.userModel.findOne({ email: user.email });
+    if (!findUser) {
+      throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+    }
+    const imageObject = {
+      url: image,
+      label: label,
+    };
+    findUser.images.push(imageObject);
+    await findUser.save();
+    const sanitizedUser = this.sanitizeUser(findUser);
+    return sanitizedUser;
+  }
+
+  async findImageByLabel(label: string, user: User) {
+    const findUser = await this.userModel.findOne({ email: user.email });
+    if (!findUser) {
+      throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+    }
+    const findImage = findUser.images.find((image) => image.label === label);
+    return findImage;
+  }
+
+  async deleteImage(imageURL: string, user: User) {
+    const findUser = await this.userModel.findOne({ email: user.email });
+    if (!findUser) {
+      throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+    }
+    const findImage = findUser.images.find((image) => image.url === imageURL);
+    if (!findImage) {
+      throw new HttpException('Image not found', HttpStatus.BAD_REQUEST);
+    }
+    const index = findUser.images.indexOf(findImage);
+    findUser.images.splice(index, 1);
+    await findUser.save();
+    const sanitizedUser = this.sanitizeUser(findUser);
+    return sanitizedUser;
+  }
+
+  async updateImage(
+    imageURL: string,
+    containerName: string,
+    file: Express.Multer.File,
+    user: User,
+  ) {
+    const findUser = await this.userModel.findOne({ email: user.email });
+    if (!findUser) {
+      throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+    }
+    const findImage = findUser.images.find((image) => image.url == imageURL);
+
+    if (!findImage) {
+      throw new HttpException('Image not found', HttpStatus.BAD_REQUEST);
+    }
+    const index = findUser.images.indexOf(findImage);
+
+    this.containerName = containerName;
+    const imgUrl = uuid() + file.originalname;
+    const blobClient = this.getBlobClient(imgUrl);
+    await blobClient.uploadData(file.buffer);
+    const publicUrl = `${this.azurePublicUrl}/${imgUrl}`;
+    findUser.images[index].url = publicUrl;
+
+    await findUser.save();
+    const sanitizedUser = this.sanitizeUser(findUser);
+    return sanitizedUser;
   }
 }

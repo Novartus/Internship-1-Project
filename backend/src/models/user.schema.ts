@@ -11,6 +11,13 @@ export const UserSchema = new mongoose.Schema({
     id: { type: String, required: false },
     avatar: { type: String, required: false },
   },
+  images: [
+    {
+      url: { type: String, required: false },
+      label: { type: String, required: false },
+      date: { type: Date, required: false, default: Date.now },
+    },
+  ],
 });
 
 UserSchema.pre('save', async function (next: any) {
