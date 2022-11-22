@@ -69,6 +69,15 @@ export class AuthController {
     return await this.userService.changePassword(changePasswordDTO, user);
   }
 
+  @Post('check-password')
+  @UseGuards(AuthGuard('jwt'))
+  async checkPassword(
+    @Body() body: { password: string },
+    @GetUser() user: User,
+  ) {
+    return await this.userService.checkPassword(body, user);
+  }
+
   @Get('profile')
   @UseGuards(AuthGuard('jwt'))
   async getProfile(@GetUser() user: User) {

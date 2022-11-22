@@ -13,6 +13,7 @@ export const ImageViewer = ({ url, label }) => {
   const [selectedImage, setSelectedImage] = useState(null);
 
   const notify = () => {
+    let password = "";
     toast.info(
       <div>
         <input
@@ -20,6 +21,9 @@ export const ImageViewer = ({ url, label }) => {
           id="label"
           placeholder="Enter Your password to delete"
           style={{ width: "100%" }}
+          onChange={(e) => {
+            password = e.target.value;
+          }}
         />
         <button
           className="btn"
@@ -32,8 +36,9 @@ export const ImageViewer = ({ url, label }) => {
             margin: "10px",
             cursor: "pointer",
           }}
-          onClick={() => {
+          onClick={async () => {
             const label = document.getElementById("label").value;
+            await checkPasswordAPI(password);
             deletePictureAPI(label);
             toast.dismiss();
           }}
@@ -46,8 +51,26 @@ export const ImageViewer = ({ url, label }) => {
 
   const [mouseEntered, setMouseEntered] = useState(false);
 
+  const checkPasswordAPI = async (password) => {
+    const backendUrl = "http://localhost:3000/auth/check-password";
+    const response = await axios({
+      method: "POST",
+      url: backendUrl,
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      data: {
+        password: password,
+      },
+    });
+    if (response.status !== 200 || response.status !== 201) {
+      alert("Invalid Password, Can not delete Image!");
+      return;
+    }
+  };
+
   const deletePictureAPI = async (label) => {
-    alert("password", label);
+    // alert("password", label);
     const backendUrl = "http://localhost:3000/auth/image/delete";
     const response = await axios({
       method: "DELETE",

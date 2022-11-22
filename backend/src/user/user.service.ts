@@ -88,6 +88,30 @@ export class UserService {
     return sanitized;
   }
 
+  async checkPassword(data: { password: string }, userData: any) {
+    console.log('DATA', data);
+    const { password } = data;
+    const user = await this.userModel.findOne({ email: userData.email });
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+    }
+
+    let flag = false;
+    if (bcrypt.compare(password, user.password)) {
+      flag = true;
+    }
+    if (!flag) {
+      throw new HttpException(
+        'Invalid current Password',
+        HttpStatus.BAD_REQUEST,
+      );
+    } else {
+      return {
+        message: 'Password matched',
+      };
+    }
+  }
+
   async changePassword(UserDTO: ChangePasswordDTO, payload: Payload) {
     const { password, newPassword, confirmPassword } = UserDTO;
     const user = await this.userModel.findOne({ email: payload.email });
